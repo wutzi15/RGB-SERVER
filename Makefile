@@ -1,7 +1,7 @@
 CPP = g++
-CPPFLAGS = -O2 -std=gnu++0x -Iinclude 
+CPPFLAGS = -O2  
 LD = g++
-LDFLAGS = 
+LDFLAGS =  
 LIBS = -lboost_system -lboost_thread
 
 all:main.cpp

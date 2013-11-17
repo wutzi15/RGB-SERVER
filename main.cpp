@@ -134,16 +134,17 @@ int main(int argc, char* argv[])
 {
   try
   {
+/*
     if (argc != 2)
     {
       std::cerr << "Usage: blocking_tcp_echo_server <port>\n";
       return 1;
     }
-
+*/
     boost::asio::io_service io_service;
 
-    using namespace std; // For atoi.
-    server(io_service, atoi(argv[1]));
+    //using namespace std; // For atoi.
+    server(io_service, 4711);
   }
   catch (std::exception& e)
   {
