@@ -17,6 +17,7 @@ typedef boost::shared_ptr<tcp::socket> socket_ptr;
 
 int R,G,B;
 std::ofstream o("/dev/spidev0.0");
+std::ofstream latch("/sys/class/gpio/gpio25/value");
 struct rgb{
 	rgb (int r, int g, int b) :r(r), g(g), b(b){};
 	int r : 12;
@@ -110,8 +111,11 @@ void session(socket_ptr sock)
         throw boost::system::system_error(error); // Some other error.
 
     //writetospi(data);
+    latch << "0";
     std::cout << "Sending to spi: " << std::hex << data<<std::endl;
     o << data;
+    latch << "1";
+    latch << "0";
       //boost::asio::write(*sock, boost::asio::buffer(data, length));
     }
   }
