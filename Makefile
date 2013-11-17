@@ -1,10 +1,10 @@
-CPP = g++ 
-CPPFLAGS = -O2 -std=c++11 
+CPP = g++
+CPPFLAGS = -O2 -std=gnu++0x -Iinclude 
 LD = g++
 LDFLAGS = 
-LIBS = -lboost_system
+LIBS = -lboost_system -lboost_thread
 
-all:
+all:main.cpp
 	$(CPP) $(CPPFLAGS) -o main.o -c main.cpp
 	$(LD) $(LDFLAGS) -o rgbserver main.o $(LIBS)
 

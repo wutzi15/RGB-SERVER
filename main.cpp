@@ -1,14 +1,20 @@
-#include <cstdlib>
-#include <fstream>
-#include <thread>
-#include <utility>
-#include <boost/asio.hpp>
 
+#include <cstdlib>
+#include <iostream>
+#include <fstream>
+#include <boost/bind.hpp>
+#include <boost/smart_ptr.hpp>
+#include <boost/asio.hpp>
+#include <boost/thread/thread.hpp>
 
 using boost::asio::ip::tcp;
 
-
 const int max_length = 1024;
+
+typedef boost::shared_ptr<tcp::socket> socket_ptr;
+
+
+
 int R,G,B;
 std::ofstream o("/dev/spidev0.0");
 struct rgb{
@@ -88,58 +94,61 @@ void writetospi(char * data)
 }
 
 
-void session(tcp::socket sock)
+void session(socket_ptr sock)
 {
-	try
-	{
-		for (;;)
-		{
-			char data[max_length];
+  try
+  {
+    for (;;)
+    {
+      char data[max_length];
 
-			boost::system::error_code error;
-			size_t length = sock.read_some(boost::asio::buffer(data), error);
-			if (error == boost::asio::error::eof)
-        		break; // Connection closed cleanly by peer.
-    		else if (error)
-        	throw boost::system::system_error(error); // Some other error.
+      boost::system::error_code error;
+      size_t length = sock->read_some(boost::asio::buffer(data), error);
+      if (error == boost::asio::error::eof)
+        break; // Connection closed cleanly by peer.
+      else if (error)
+        throw boost::system::system_error(error); // Some other error.
 
-    
-    	writetospi(data);
-
-
-    	boost::asio::write(sock, boost::asio::buffer(data, length));
-		}		
-	}
-
-catch (std::exception& e)
-{
-	std::cerr << "Exception in thread: " << e.what() << "\n";
-}
+    writetospi(data);
+      //boost::asio::write(*sock, boost::asio::buffer(data, length));
+    }
+  }
+  catch (std::exception& e)
+  {
+    std::cerr << "Exception in thread: " << e.what() << "\n";
+  }
 }
 
 void server(boost::asio::io_service& io_service, unsigned short port)
 {
-	tcp::acceptor a(io_service, tcp::endpoint(tcp::v4(), port));
-	for (;;)
-	{
-		tcp::socket sock(io_service);
-		a.accept(sock);
-		std::thread(session, std::move(sock)).detach();
-	}
+  tcp::acceptor a(io_service, tcp::endpoint(tcp::v4(), port));
+  for (;;)
+  {
+    socket_ptr sock(new tcp::socket(io_service));
+    a.accept(*sock);
+    boost::thread t(boost::bind(session, sock));
+  }
 }
 
 int main(int argc, char* argv[])
 {
-	try
-	{
-		boost::asio::io_service io_service;
+  try
+  {
+    if (argc != 2)
+    {
+      std::cerr << "Usage: blocking_tcp_echo_server <port>\n";
+      return 1;
+    }
 
-		server(io_service, 4711);
-	}
-	catch (std::exception& e)
-	{
-		std::cerr << "Exception: " << e.what() << "\n";
-	}
+    boost::asio::io_service io_service;
 
-	return 0;
+    using namespace std; // For atoi.
+    server(io_service, atoi(argv[1]));
+  }
+  catch (std::exception& e)
+  {
+    std::cerr << "Exception: " << e.what() << "\n";
+  }
+
+  return 0;
 }
