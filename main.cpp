@@ -109,7 +109,9 @@ void session(socket_ptr sock)
       else if (error)
         throw boost::system::system_error(error); // Some other error.
 
-    writetospi(data);
+    //writetospi(data);
+    std::cout << "Sending to spi: " << std::hex << data<<std::endl;
+    o << data;
       //boost::asio::write(*sock, boost::asio::buffer(data, length));
     }
   }
