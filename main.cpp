@@ -6,6 +6,8 @@
 #include <boost/smart_ptr.hpp>
 #include <boost/asio.hpp>
 #include <boost/thread/thread.hpp>
+#include "SerialCom.h"
+#include <memory>
 
 using boost::asio::ip::tcp;
 
@@ -13,7 +15,7 @@ const int max_length = 1024;
 
 typedef boost::shared_ptr<tcp::socket> socket_ptr;
 
-
+std::unique_ptr<SerialCom> com;
 
 int R,G,B;
 std::ofstream o("/dev/ttyACM0");
@@ -112,10 +114,9 @@ void session(socket_ptr sock)
 
     //writetospi(data);
     latch << "0";
-    std::cout << "Sending to spi: " << std::hex << data<<std::endl;
-    o << data;
-    latch << "1";
-    latch << "0";
+    std::cout << "Sending to ACM0: " << std::hex << data<<std::endl;
+   	com->Write(data);
+   	std::cout << "Got : " << com->Read() <<std::endl;
       //boost::asio::write(*sock, boost::asio::buffer(data, length));
     }
   }
@@ -148,7 +149,7 @@ int main(int argc, char* argv[])
     }
 */
     boost::asio::io_service io_service;
-
+    com = std::unique_ptr<SerialCom>(new SerialCom("/dev/ttyACM0", B115200));
     //using namespace std; // For atoi.
     server(io_service, 4711);
   }
